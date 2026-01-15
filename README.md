@@ -1,4 +1,12 @@
-# Data & Statistics Portfolio
+# Statistics-Oriented Data Pipeline Portfolio
+This repository demonstrates how data pipelines can be designed
+to support **statistical analysis and research**, rather than
+focusing solely on data processing efficiency.
+
+## Core Focus
+- Data generating process
+- Statistical assumptions
+- Reproducible data construction
 
 ## 👤 About Me
 - Applied Statistics undergraduate. Gachon univ.
@@ -11,6 +19,4 @@
 - EDA & visualization
 - Algorithm & Networking basics
 
-## 📂 Projects
-| Category | Project | Description |
-|--------|--------|------------|
+
