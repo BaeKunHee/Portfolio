@@ -80,3 +80,33 @@ Directory suggestion:
 KMA data are observational and sensor-based.
 Missingness and extreme values may reflect real-world processes, not mere errors.
 Therefore, we treat cleaning as an explicit policy rather than a one-off preprocessing step.
+
+---
+
+## 7. Boundary of statistical assumptions
+
+At this stage, we explicitly limit statistical assumptions to the following:
+- Placeholder values are not observations.
+- Missingness is preserved as information.
+
+No assumptions are made about:
+- distributional form
+- independence
+- stationarity
+- linearity
+
+These assumptions are deferred to later stages where analysis goals are defined.
+
+---
+
+## 8. Reproducibility and auditability
+
+All cleaning decisions are:
+- deterministic
+- parameterized
+- logged via summary reports
+
+This allows downstream users to:
+- reproduce the exact cleaning step
+- inspect missingness patterns
+- revise assumptions without modifying raw data
