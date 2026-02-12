@@ -1,112 +1,155 @@
-# Data Cleaning Policy (KMA sfctm2)
+데이터 정제 정책 (KMA 지상관측 sfctm2)
+1. 목적
 
-## 1. Purpose
-This stage defines a minimal and transparent cleaning policy for KMA surface observation data.
-The goal is not to "make the data pretty" but to ensure that downstream analysis is not distorted
-by placeholder values and inconsistent types.
+본 단계는 KMA 지상관측 데이터에 대해 최소한의, 그리고 투명한 정제 정책을 정의하는 것을 목표로 한다. 정제의 목적은 데이터를 “보기 좋게 만드는 것”이 아니라, 하위 분석 단계에서 placeholder 값이나 자료형 불일치로 인해 결과가 왜곡되는 것을 방지하는 것이다.
 
-This project treats cleaning as a set of explicit decisions that should be auditable.
+본 프로젝트는 데이터 정제를 일회성 전처리가 아닌, 명시적이고 감사 가능한 정책 집합으로 다룬다.
 
 ---
 
-## 2. What we have in raw data
-Raw files are ingested as text and saved without modification.
+2. 원시 데이터 구조
 
-A single observation (row) represents:
-- one timestamp (TM, KST)
-- one station (STN)
-- multiple observed variables (wind, temperature, humidity, precipitation, etc.)
+원시(raw) 파일은 텍스트 형식으로 수집되며, 수정 없이 그대로 저장된다.
 
-Unit of observation:
-(TM, STN)
+단일 관측 행(row)은 다음을 의미한다:
 
----
+하나의 시점 (TM, KST)
 
-## 3. Expected data issues
-### 3.1 Placeholder missing codes
-KMA text outputs often use numeric placeholders such as:
-- -9, -9.0, -9.00
-- -99, -99.0
-These should be interpreted as missing / not observed / not applicable depending on the variable.
+하나의 관측소 (STN)
 
-Policy:
-- Convert placeholder codes to proper missing values (NaN) in the analysis-ready dataset.
+다수의 기상 변수 (풍속, 기온, 습도, 강수량 등)
 
-### 3.2 Type consistency
-Because raw data are read as strings or mixed types:
-- numeric columns may include non-numeric symbols or placeholders
-- some columns are categorical codes (e.g., weather codes) even if they look numeric
-
-Policy:
-- Keep raw as-is.
-- In cleaned layer, explicitly cast:
-  - TM -> string (or datetime later)
-  - STN -> integer
-  - continuous variables -> float
-  - code/categorical variables -> string or category
-
-### 3.3 Token/format mismatch
-Some rows may not match the expected number of tokens due to formatting differences.
-
-Policy:
-- Do not "fix" them during ingestion.
-- In parsing/cleaning, log how many rows were skipped and why.
+관측 단위: (TM, STN)
 
 ---
 
-## 4. What we do NOT do in this stage
-To keep assumptions minimal, we do not:
-- impute missing values
-- remove outliers
-- aggregate over time or stations
-- enforce domain constraints (e.g., humidity range)
-These will be handled later when analysis goals are specified.
+3. 예상되는 데이터 문제
+  3.1 Placeholder 결측 코드
+  
+  KMA 텍스트 데이터는 다음과 같은 숫자형 placeholder를 사용한다:
+  
+  -9, -9.0, -9.00
+  
+  -99, -99.0
+  
+  이는 실제 관측값이 아니라, 결측/미관측/비적용을 의미할 수 있다.
+  
+  정책:
+  
+  분석용 데이터셋에서는 placeholder 값을 NaN으로 변환한다.
+  
+  원시 데이터는 수정하지 않는다.
+
+  3.2 자료형 일관성 문제
+  
+  원시 데이터는 문자열 또는 혼합 자료형으로 읽히므로:
+  
+  수치형 변수에 placeholder가 포함될 수 있음
+  
+  숫자처럼 보이나 실제로는 범주 코드인 변수 존재
+  
+  정책:
+  
+  Raw 데이터는 그대로 유지
+  
+  Cleaned 레이어에서 명시적 형 변환 수행
+  
+  필드	변환 정책
+  TM	string (또는 이후 datetime 변환)
+  STN	integer
+  연속형 변수	float
+  코드/범주 변수	string 또는 category
+ 
+  3.3 토큰/포맷 불일치
+  
+  일부 행은 포맷 차이로 인해 예상된 컬럼 수와 일치하지 않을 수 있다.
+  
+  정책:
+  
+  ingestion 단계에서 수정하지 않음
+  
+  cleaning 단계에서 skip된 행 수와 사유를 로그로 기록
 
 ---
 
-## 5. Outputs of cleaning stage
-This stage will produce:
-- a cleaned table with consistent types
-- placeholder missing codes converted to NaN
-- a simple data-quality report (counts of missing per column, parse skip counts)
+4. 이 단계에서 수행하지 않는 것
 
-Directory suggestion:
-- data_clean/ : cleaned csv/parquet
-- reports/    : summary logs (missing counts, parse stats)
+가정의 최소화를 위해 다음은 수행하지 않는다:
 
----
+결측값 대체(imputation)
 
-## 6. Rationale
-KMA data are observational and sensor-based.
-Missingness and extreme values may reflect real-world processes, not mere errors.
-Therefore, we treat cleaning as an explicit policy rather than a one-off preprocessing step.
+이상치 제거
 
----
+시간/관측소 단위 집계
 
-## 7. Boundary of statistical assumptions
+도메인 제약 강제 (예: 습도 범위 제한)
 
-At this stage, we explicitly limit statistical assumptions to the following:
-- Placeholder values are not observations.
-- Missingness is preserved as information.
+이러한 판단은 이후 분석 목적이 명확해진 단계에서 수행한다.
 
-No assumptions are made about:
-- distributional form
-- independence
-- stationarity
-- linearity
+5. 산출물
 
-These assumptions are deferred to later stages where analysis goals are defined.
+정제 단계의 결과물은 다음과 같다:
+
+일관된 자료형을 가진 cleaned 테이블
+
+placeholder 값이 NaN으로 변환된 데이터
+
+데이터 품질 요약 리포트
+(컬럼별 결측 개수, skip 행 수 등)
+
+디렉토리 구조 예시:
+
+data_clean/   : cleaned csv/parquet
+reports/      : missing 요약, parse 통계 로그
 
 ---
 
-## 8. Reproducibility and auditability
+6. 정책 수립 배경
 
-All cleaning decisions are:
-- deterministic
-- parameterized
-- logged via summary reports
+KMA 데이터는 센서 기반 관측 데이터이다.
+결측값이나 극단값은 단순 오류가 아니라 실제 물리적 현상을 반영할 수 있다.
 
-This allows downstream users to:
-- reproduce the exact cleaning step
-- inspect missingness patterns
-- revise assumptions without modifying raw data
+따라서 본 프로젝트는 데이터 정제를 “값을 정리하는 작업”이 아니라,
+가정을 어디까지 허용할 것인가를 명시하는 정책 설계 과정으로 다룬다.
+
+---
+
+7. 통계적 가정의 경계
+
+본 단계에서는 다음 가지만 명확히 한다:
+
+Placeholder 값은 실제 관측값이 아니다.
+
+결측 자체는 정보로 보존된다.
+
+다음 가정은 이 단계에서 하지 않는다:
+
+분포 형태 가정
+
+독립성 가정
+
+정상성 가정
+
+선형성 가정
+
+이는 분석 목적이 정의된 이후 단계로 유보한다.
+
+---
+
+8. 재현성과 감사 가능성
+
+모든 정제 결정은:
+
+결정적(deterministic)
+
+파라미터화(parameterized)
+
+로그 기록(logged)
+
+이를 통해 다음이 가능하다:
+
+동일한 정제 과정 재현
+
+결측 패턴 점검
+
+가정 수정 시 raw 데이터 변경 없이 재처리
